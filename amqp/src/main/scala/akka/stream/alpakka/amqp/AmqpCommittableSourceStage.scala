@@ -11,7 +11,7 @@ import com.rabbitmq.client.{Channel, DefaultConsumer, Envelope, ShutdownSignalEx
 
 import scala.collection.mutable
 
-final class CommittableMessage(val bytes: ByteString,
+final class CommittableMessage[T](val bytes: T,
                                val envelope: Envelope,
                                val properties: BasicProperties,
                                channel: Channel) {
@@ -21,17 +21,17 @@ final class CommittableMessage(val bytes: ByteString,
 }
 
 object CommittableMessage {
-  def apply(bytes: ByteString, envelope: Envelope, properties: BasicProperties, channel: Channel): CommittableMessage =
+  def apply[T](bytes: T, envelope: Envelope, properties: BasicProperties, channel: Channel): CommittableMessage[T] =
     new CommittableMessage(bytes, envelope, properties, channel)
 }
 
 final class AmqpCommittableSourceStage(settings: AmqpSourceSettings, bufferSize: Int)
-    extends GraphStage[SourceShape[CommittableMessage]]
+    extends GraphStage[SourceShape[CommittableMessage[ByteString]]]
     with AmqpConnector { stage =>
 
-  val out = Outlet[CommittableMessage]("AmqpCommittableSource.out")
+  val out = Outlet[CommittableMessage[ByteString]]("AmqpCommittableSource.out")
 
-  override def shape: SourceShape[CommittableMessage] = SourceShape.of(out)
+  override def shape: SourceShape[CommittableMessage[ByteString]] = SourceShape.of(out)
 
   override protected def initialAttributes: Attributes = Attributes.name("AmqpCommittableSource")
 
@@ -42,7 +42,7 @@ final class AmqpCommittableSourceStage(settings: AmqpSourceSettings, bufferSize:
 
       override def connectionFactoryFrom(settings: AmqpConnectionSettings) = stage.connectionFactoryFrom(settings)
 
-      private val queue = mutable.Queue[CommittableMessage]()
+      private val queue = mutable.Queue[CommittableMessage[ByteString]]()
 
       override def whenConnected(): Unit = {
         import scala.collection.JavaConverters._
@@ -99,7 +99,7 @@ final class AmqpCommittableSourceStage(settings: AmqpSourceSettings, bufferSize:
 
       }
 
-      def handleDelivery(message: CommittableMessage): Unit =
+      def handleDelivery(message: CommittableMessage[ByteString]): Unit =
         if (isAvailable(out)) {
           push(out, message)
         } else {

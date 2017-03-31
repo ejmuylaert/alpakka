@@ -22,7 +22,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
         NamedQueueSourceSettings(DefaultAmqpConnection, queueName).withDeclarations(queueDeclaration),
         1
       )
-      val subscriber = TestSubscriber.probe[CommittableMessage]()
+      val subscriber = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriber))
       subscriber.ensureSubscription()
 
@@ -70,7 +70,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
         NamedQueueSourceSettings(DefaultAmqpConnection, queueName).withDeclarations(queueDeclaration),
         1
       )
-      val subscriber = TestSubscriber.probe[CommittableMessage]()
+      val subscriber = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriber))
       subscriber.ensureSubscription()
 
@@ -81,7 +81,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       subscriber.expectNext().bytes.utf8String shouldEqual "one"
       subscriber.cancel()
 
-      val subscriberNext = TestSubscriber.probe[CommittableMessage]()
+      val subscriberNext = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriberNext))
       subscriberNext.ensureSubscription()
       subscriberNext.request(4)
@@ -98,7 +98,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
         NamedQueueSourceSettings(DefaultAmqpConnection, queueName).withDeclarations(queueDeclaration),
         1
       )
-      val subscriber = TestSubscriber.probe[CommittableMessage]()
+      val subscriber = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource
         .map(msg => {
           msg.commitScalaDsl()
@@ -114,7 +114,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       subscriber.expectNext().bytes.utf8String shouldEqual "one"
       subscriber.cancel()
 
-      val subscriberNext = TestSubscriber.probe[CommittableMessage]()
+      val subscriberNext = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriberNext))
       subscriberNext.ensureSubscription()
       subscriberNext.request(4)
