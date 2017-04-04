@@ -3,6 +3,7 @@
  */
 package akka.stream.alpakka.amqp
 
+import akka.japi.function
 import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import akka.util.ByteString
@@ -11,13 +12,16 @@ import com.rabbitmq.client.{Channel, DefaultConsumer, Envelope, ShutdownSignalEx
 
 import scala.collection.mutable
 
-final class CommittableMessage[T](val bytes: T,
-                               val envelope: Envelope,
-                               val properties: BasicProperties,
-                               channel: Channel) {
+final class CommittableMessage[T](val value: T,
+                                  val envelope: Envelope,
+                                  val properties: BasicProperties,
+                                  channel: Channel) {
 
-  def commitScalaDsl(): Unit =
+  def commit(): Unit =
     channel.basicAck(envelope.getDeliveryTag, false)
+
+  def reject(requeue: Boolean): Unit =
+    channel.basicReject(envelope.getDeliveryTag, requeue)
 }
 
 object CommittableMessage {

@@ -30,7 +30,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       Source(input).map(s => ByteString(s)).runWith(amqpSink)
 
       subscriber.request(4)
-      subscriber.expectNext().bytes.utf8String shouldEqual "one"
+      subscriber.expectNext().value.utf8String shouldEqual "one"
     }
 
     "non commitable source acks requested messages" in {
@@ -78,14 +78,14 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       Source(input).map(s => ByteString(s)).runWith(amqpSink)
 
       subscriber.request(4)
-      subscriber.expectNext().bytes.utf8String shouldEqual "one"
+      subscriber.expectNext().value.utf8String shouldEqual "one"
       subscriber.cancel()
 
       val subscriberNext = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriberNext))
       subscriberNext.ensureSubscription()
       subscriberNext.request(4)
-      subscriberNext.expectNext().bytes.utf8String shouldEqual "one"
+      subscriberNext.expectNext().value.utf8String shouldEqual "one"
     }
 
     "should deliver next message when commited" in {
@@ -101,7 +101,7 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       val subscriber = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource
         .map(msg => {
-          msg.commitScalaDsl()
+          msg.commit()
           msg
         })
         .runWith(Sink.fromSubscriber(subscriber))
@@ -111,14 +111,14 @@ class AmqpCommittableSourceSpec extends AmqpSpec {
       Source(input).map(s => ByteString(s)).runWith(amqpSink)
 
       subscriber.request(4)
-      subscriber.expectNext().bytes.utf8String shouldEqual "one"
+      subscriber.expectNext().value.utf8String shouldEqual "one"
       subscriber.cancel()
 
       val subscriberNext = TestSubscriber.probe[CommittableMessage[ByteString]]()
       amqpSource.runWith(Sink.fromSubscriber(subscriberNext))
       subscriberNext.ensureSubscription()
       subscriberNext.request(4)
-      subscriberNext.expectNext().bytes.utf8String shouldEqual "two"
+      subscriberNext.expectNext().value.utf8String shouldEqual "two"
     }
 
   }
